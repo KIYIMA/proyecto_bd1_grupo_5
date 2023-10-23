@@ -1,0 +1,15 @@
+Tema: Vistas y vistas indexadas.
+
+Objetivos:
+
+Entender conceptualmente el significado.
+Tareas: 
+
+Crear un documento de acuerdo al modelo existente en el aula virtual.
+Crear una vista sobre la tabla administrador que solo muestre los campos apynom, sexo  y fecha de nacimiento.
+Realizar insert de un lote de datos sobre la vista recien creada. Verificar el resultado en la tabla administrador.
+Realizar update sobre algunos de los registros creados y volver a verificar el resultado en la tabla.
+Borrar todos los registros insertados a través de la vista.
+Crear una vista que muestre los datos de las columnas de las siguientes tablas: (Administrador->Apeynom, consorcio->Nombre, gasto->periodo, gasto->fechaPago, tipoGasto->descripcion) .
+Crear un indice sobre la columna fechaPago sobre la vista  recien creada.
+Expresar las conclusiones en base a las pruebas realizadas.
