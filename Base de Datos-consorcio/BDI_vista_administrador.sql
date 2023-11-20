@@ -77,3 +77,94 @@ ON [dbo].[vistaGeneral] (fechaPago);
 select * from vistaGeneral order by nombre asc ;
 
 -- 8) Las concluciones fui poniendo en cada punto.
+
+
+-- Implementacion de backup y restore
+
+-- 1 Verificar el modo de recuperación de la base de datos
+use base_consorcio;
+SELECT name, recovery_model_desc
+FROM sys.databases
+WHERE name = 'base_consorcio;';
+
+go
+
+-- 2 cambiamos el modo de recuperacion
+USE master -- se utiliza el contexto de la base de datos master
+ALTER DATABASE base_consorcio
+SET RECOVERY FULL;
+
+go
+
+-- 3 Realizamos backup de la base de datos
+BACKUP DATABASE base_consorcio
+TO DISK = 'C:\backup\consorcio_backup.bak'
+WITH FORMAT, INIT;
+
+-- 4 Se insertan 10 nuevos registros
+USE base_consorcio;
+select * from gasto;
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (1, 1, 1, 5, GETDATE(), 5, 1200);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (2, 3, 1, 6, GETDATE(), 2, 1500);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (3, 2, 4, 7, GETDATE(), 8, 800);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (1, 4, 2, 5, GETDATE(), 6, 2000);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (2, 1, 3, 6, GETDATE(), 1, 1000);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (3, 3, 1, 7, GETDATE(), 4, 1200);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (1, 2, 2, 5, GETDATE(), 7, 900);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (2, 4, 4, 6, GETDATE(), 3, 1800);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (3, 1, 3, 7, GETDATE(), 5, 1100);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (1, 3, 1, 5, GETDATE(), 9, 1300);
+
+
+-- 4 Realizamos backup del log de la base de datos
+
+BACKUP LOG base_consorcio
+TO DISK = 'C:\backup\LogBackup.trn'
+WITH FORMAT, INIT;
+
+
+-- Insertamos 10 registros mas
+
+select * from gasto
+
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (1, 1, 1, 5, GETDATE(), 5, 1200);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (2, 2, 2, 6, GETDATE(), 6, 1300);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (3, 3, 3, 7, GETDATE(), 7, 1400);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (4, 4, 4, 8, GETDATE(), 8, 1500);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (5, 5, 5, 9, GETDATE(), 9, 1600);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (6, 6, 6, 10, GETDATE(), 10, 1700);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (7, 7, 7, 11, GETDATE(), 11, 1800);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (8, 8, 8, 12, GETDATE(), 12, 1900);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (9, 9, 9, 13, GETDATE(), 13, 2000);
+INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (10, 10, 10, 14, GETDATE(), 14, 2100);
+
+
+
+--5 Realizamos backup del log en otra ubicacion
+
+BACKUP LOG base_consorcio
+TO DISK = 'C:\backup\logs\LogBackup2.trn'
+WITH FORMAT, INIT;
+
+--6 Restauramos el backup de la base de datos
+
+USE master
+
+RESTORE DATABASE base_consorcio
+FROM DISK = 'C:\backup\consorcio_backup.bak'
+WITH REPLACE, NORECOVERY;
+
+RESTORE LOG base_consorcio
+FROM DISK = 'C:\backup\LogBackup.trn'
+WITH NORECOVERY;
+
+-- Segundo log
+
+RESTORE LOG base_consorcio
+FROM DISK = 'C:\backup\logs\LogBackup2.trn'
+WITH RECOVERY;
+
+USE base_consorcio
+SELECT * FROM gasto
+
+
