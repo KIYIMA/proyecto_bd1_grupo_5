@@ -170,3 +170,259 @@ USE base_consorcio
 SELECT * FROM gasto
 
 
+-----------implementacion de transacciones --------------
+ USE base_consorcio;
+
+-- CREACION DE LAS TRANSACCIONES
+BEGIN TRY -- INICIAMOS EL BEGIN TRY PARA LUEGO COLOCAR LA LOGICA DENTRO Y ASEGURARNOS DE QUE SI ALGO FALLA IRA POR EL CATCH
+	BEGIN TRAN -- COMENZAMOS LA TRANSACCION
+	INSERT INTO administrador(apeynom, viveahi, tel, sexo, fechnac) -- UN INSERT A LA TABLA QUE QUEREMOS
+	VALUES ('pablito', 'S', '37942222', 'M', '01/01/1996') -- LOS VALORES A INGRESAR A LA TABLA
+
+	INSERT INTO consorcio(idprovincia, idlocalidad, idconsorcio, nombre, direccion, idzona, idconserje, idadmin)
+	VALUES (999, 1, 1, 'EDIFICIO-111', 'PARAGUAY N 999', 5, 100, 1) -- GENERAMOS UN ERROR INGRESANDO EL ID PROVINCIA 999 QUE NO EXISTE.
+	
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',5,608.97)
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',2,608.97)
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',3,608.97)
+
+	COMMIT TRAN -- SI TODO FUE EXITOSO FINALIZAMOS LA TRANSACCION
+END TRY
+BEGIN CATCH -- SI ALGO FALLA VENDRA AQUI
+	SELECT ERROR_MESSAGE() -- MOSTRAMOS EL MENSAJE DE ERROR
+	ROLLBACK TRAN -- VOLVEMOS HACIA ATRAS PARA MANTENER LA CONSISTENCIA DE LOS DATOS
+END CATCH
+
+-----------------------------------------------
+
+--- CASO Transacción Terminada 
+ USE base_consorcio;
+
+-- CREACION DE TRANSACCIONES
+BEGIN TRY -- INICIAMOS EL BEGIN TRY PARA LUEGO COLOCAR LA LOGICA DENTRO Y ASEGURARNOS DE QUE SI ALGO FALLA IRA POR EL CATCH
+	BEGIN TRAN -- COMENZAMOS LA TRANSACCION
+	INSERT INTO administrador(apeynom, viveahi, tel, sexo, fechnac) -- UN INSERT A LA TABLA QUE QUEREMOS
+	VALUES ('pablito', 'S', '37942222', 'M', '01/01/1996') -- LOS VALORES A INGRESAR A LA TABLA
+
+	INSERT INTO consorcio(idprovincia, idlocalidad, idconsorcio, nombre, direccion, idzona, idconserje, idadmin)
+	VALUES (1, 1, 3, 'EDIFICIO-111', 'PARAGUAY N 999', 5, 100, 1) -- AHORA INGRESAMOS EL CONSORCIO SIN INTENCION DE ERROR.
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',5,608.97)
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',2,608.97)
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',3,608.97)
+
+	COMMIT TRAN -- SI TODO FUE EXITOSO FINALIZAMOS LA TRANSACCION
+END TRY
+BEGIN CATCH -- SI ALGO FALLA VENDRA AQUI
+	SELECT ERROR_MESSAGE() -- MOSTRAMOS EL MENSAJE DE ERROR
+	ROLLBACK TRAN -- VOLVEMOS HACIA ATRAS PARA MANTENER LA CONSISTENCIA DE LOS DATOS
+END CATCH
+
+-- LAS SIGUIENTES CONSULTAS VERIFICAN LOS RESULTADOS DE LAS PRUEBAS SOBRE TRANSACCIONES PLANAS 
+-----------------------------------------------
+ -- NOS MUESTRA CUAL FUE EL ULTIMO REGISTRO DE ADMINISTRADOR CARGADO
+SELECT TOP 1 * FROM administrador ORDER BY idadmin DESC; 
+
+ -- MUESTRA LOS DATOS DEL CONSORCIO CON LA DIRECCION EN CUESTION (EXITE O NO)
+SELECT * FROM consorcio WHERE direccion = 'PARAGUAY N 999';
+
+-- MUESTRA LOS ULTIMOS 3 REGISTROS DE GASTOS CARGADOS
+SELECT TOP 3 * FROM gasto ORDER BY idgasto DESC; 
+-----------------------------------------------
+
+
+-----------------------------------------------
+--- CASO Transacción Anidada fallida
+-- USE base_consorcio;
+
+-- CREACION DE TRANSACCIONES
+BEGIN TRY -- INICIAMOS EL BEGIN TRY PARA LUEGO COLOCAR LA LOGICA DENTRO Y ASEGURARNOS DE QUE SI ALGO FALLA IRA POR EL CATCH
+	BEGIN TRAN -- COMENZAMOS LA TRANSACCION
+	INSERT INTO administrador(apeynom, viveahi, tel, sexo, fechnac) -- UN INSERT A LA TABLA QUE QUEREMOS
+	VALUES ('pablito clavounclavito', 'S', '37942222', 'M', '01/01/1996') -- LOS VALORES A INGRESAR A LA TABLA
+
+	INSERT INTO consorcio(idprovincia, idlocalidad, idconsorcio, nombre, direccion, idzona, idconserje, idadmin)
+	VALUES (1, 1, 3, 'EDIFICIO-111', 'PARAGUAY N 999', 5, 100, 1) -- GENERAMOS UN ERROR INGRESANDO EL ID PROVINCIA 999 QUE NO EXISTE.
+
+	-------------------------
+	BEGIN TRAN -- COMENZAMOS UNA TRANSACCION ANIDADA
+		UPDATE consorcio SET nombre = 'EDIFICIO-222'; -- ACTUALIZAMOS EL REGISTRO DE CONSORCIO QUE CARGAMOS ANTES
+		INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) 
+			VALUES (1,1,1,6,'20130616',20,608.97) -- INSERT A LA TABLA GASTO, DEBE DAR UN ERROR POR TIPO DE GASTO
+	COMMIT TRAN -- FINALIZAMOS UNA TRANSACCION ANIDADA
+	------------------------
+
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',5,608.97)
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',2,608.97)
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',3,608.97)
+
+	COMMIT TRAN -- SI TODO FUE EXITOSO FINALIZAMOS LA TRANSACCION
+END TRY
+BEGIN CATCH -- SI ALGO FALLA VENDRA AQUI
+	SELECT ERROR_MESSAGE() -- MOSTRAMOS EL MENSAJE DE ERROR
+	ROLLBACK TRAN -- VOLVEMOS HACIA ATRAS PARA MANTENER LA CONSISTENCIA DE LOS DATOS
+END CATCH
+
+
+
+
+-----------------------------------------------
+--- CASO Transacción Anidada 
+-- USE base_consorcio;
+
+-- CREACION DE TRANSACCIONES
+BEGIN TRY -- INICIAMOS EL BEGIN TRY PARA LUEGO COLOCAR LA LOGICA DENTRO Y ASEGURARNOS DE QUE SI ALGO FALLA IRA POR EL CATCH
+	BEGIN TRAN -- COMENZAMOS LA TRANSACCION
+	INSERT INTO administrador(apeynom, viveahi, tel, sexo, fechnac) -- UN INSERT A LA TABLA QUE QUEREMOS
+	VALUES ('pablito clavounclavito', 'S', '37942222', 'M', '01/01/1996') -- LOS VALORES A INGRESAR A LA TABLA
+
+	INSERT INTO consorcio(idprovincia, idlocalidad, idconsorcio, nombre, direccion, idzona, idconserje, idadmin)
+	VALUES (1, 1, 3, 'EDIFICIO-111', 'PARAGUAY N 999', 5, 100, 1) -- GENERAMOS UN ERROR INGRESANDO EL ID PROVINCIA 999 QUE NO EXISTE.
+
+	-------------------------
+	BEGIN TRAN -- COMENZAMOS UNA TRANSACCION ANIDADA
+		UPDATE consorcio SET nombre = 'EDIFICIO-222'; -- ACTUALIZAMOS EL REGISTRO DE CONSORCIO QUE CARGAMOS ANTES
+		INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) 
+			VALUES (1,1,1,6,'20130616',5,608.97) -- INSERT A LA TABLA GASTO, DEBE DAR UN ERROR POR TIPO DE GASTO
+	COMMIT TRAN -- FINALIZAMOS UNA TRANSACCION ANIDADA
+	------------------------
+
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',5,608.97)
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',2,608.97)
+	INSERT INTO gasto(idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe)
+	VALUES (1,1,1,6,'20130616',3,608.97)
+
+	COMMIT TRAN -- SI TODO FUE EXITOSO FINALIZAMOS LA TRANSACCION
+END TRY
+BEGIN CATCH -- SI ALGO FALLA VENDRA AQUI
+	SELECT ERROR_MESSAGE() -- MOSTRAMOS EL MENSAJE DE ERROR
+	ROLLBACK TRAN -- VOLVEMOS HACIA ATRAS PARA MANTENER LA CONSISTENCIA DE LOS DATOS
+END CATCH
+
+-----------------------------------------------
+-----------------------------------------------
+-- LAS SIGUIENTES CONSULTAS VERIFICAN LOS RESULTADOS DE LAS PRUEBAS SOBRE TRANSACCIONES ANIDADAS 
+-----------------------------------------------
+ -- NOS MUESTAR CUAL FUE EL ULTIMO REGISTRO DE ADMINISTRADOR CARGADO
+SELECT TOP 1 * FROM administrador ORDER BY idadmin DESC; 
+
+ -- MUESTRA LOS DATOS DEL CONSORCIO CON LA DIRECCION EN CUESTION (EXITE O NO)
+SELECT * FROM consorcio WHERE direccion = 'PARAGUAY N 999';
+
+-- MUESTAR LOS ULTIMOS 3 REGISTROS DE GASTOS CARGADOS
+SELECT TOP 4 * FROM gasto ORDER BY idgasto DESC; 
+-----------------------------------------------
+
+
+
+
+-------------------------------------------- Indices Columnares en SQL Server ---------------------------------
+USE base_consorcio;
+
+Create table gastonew (
+	idgasto int identity not null,
+	idprovincia int not null,
+    idlocalidad int not null,
+    idconsorcio int not null, 
+	periodo int not null,
+	fechapago datetime not null,					     
+	idtipogasto int not null,
+	importe decimal (8,2) not null,	
+	Constraint PK_gastonew PRIMARY KEY (idgasto),
+	Constraint FK_gastonew_consorcio FOREIGN KEY (idprovincia,idlocalidad,idconsorcio)  REFERENCES consorcio(idprovincia,idlocalidad,idconsorcio),
+	Constraint FK_gastonew_tipo FOREIGN KEY (idtipogasto)  REFERENCES tipogasto(idtipogasto)					     					     						 					     					     
+)
+
+GO
+-- Variables para controlar el bucle de inserciónnn
+DECLARE @RowCount INT = 0;
+DECLARE @TotalRows INT = 100000; -- Número total de registros a insertar
+
+-- Inicio del bucle de inserción
+WHILE @RowCount < @TotalRows
+BEGIN
+    -- Generar datos aleatorios
+    DECLARE @idprovincia INT;
+    DECLARE @idlocalidad INT;
+    DECLARE @idconsorcio INT;
+    
+    -- valores aleatorios para idprovincia, idlocalidad e idconsorcio de la tabla "consorcio"
+    SELECT TOP 1 @idprovincia = idprovincia, @idlocalidad = idlocalidad, @idconsorcio = idconsorcio
+    FROM consorcio
+    ORDER BY NEWID();							--genera valores entre 1 y 24
+    
+								-- aleatorio entre 1 y 9
+    DECLARE @periodo INT = FLOOR(RAND() * 9) + 1;; 
+								-- Fecha en los últimos 365 días
+    DECLARE @fechapago DATETIME = DATEADD(DAY, -CAST((RAND() * 365) AS INT), GETDATE()); 
+								--genera valores entre 1 y 5
+    DECLARE @idtipogasto INT = FLOOR(RAND() * 5) + 1;
+								--genera valores entre 1 y 10
+    
+								-- Importe aleatorio
+    DECLARE @importe DECIMAL(8, 2) = CAST(RAND() * 1000 AS DECIMAL(8, 2)); 
+
+    -- Insertar el registro aleatorio en la tabla GASTONEW
+    INSERT INTO gastonew (idprovincia, idlocalidad, idconsorcio,periodo, fechapago, idtipogasto, importe)
+    VALUES (@idprovincia, @idlocalidad,@idconsorcio ,@periodo, @fechapago, @idtipogasto, @importe);
+
+    -- Incrementar el contador
+    SET @RowCount = @RowCount + 1;
+END
+GO
+
+
+
+--Es importante mencionar que solo puede haber un índice agrupado por cada tabla, porque las filas de datos solo pueden estar almacenadas de una forma.
+--Cuando se establece una restricción de clave primaria (PRIMARY KEY) en una tabla, se crea automáticamente un índice agrupado (clustered) si no se especifica uno.
+--Entonces para nuestra investigación se utilizara un índice no agrupado
+--crea un indice agrupado
+--CREATE NONCLUSTERED COLUMNSTORE INDEX NombreDelIndice
+--ON NombreDeLaTabla;
+
+go
+--El siguiente comando crea un indice no agrupado en la tabla gastonew, en las columnas especificadas
+--CREATE NONCLUSTERED COLUMNSTORE INDEX NombreDelIndice
+--ON NombreDeLaTabla (nombreColumna1, nombreColumna2,.....);
+CREATE NONCLUSTERED COLUMNSTORE INDEX Indice_NoAgrupado
+ON gastonew (idgasto, idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe);
+
+--CONSULTAS SOBRE LAS TABLAS GASTO Y GASTONEW PARA HACER UN ANALISIS DEL RENDIMIENTO
+
+--Las siguientes consultas sobre la tabla gasto y gastonew: 
+--Selecciona la fecha de pago y la suma total de los importes para cada fecha única.
+--Agrupa los resultados por fecha de pago.
+--Ordena los resultados por fecha de pago.
+go
+SELECT fechapago, SUM(importe) as TotalVentas
+FROM gasto
+GROUP BY fechapago
+ORDER BY fechapago;
+
+
+SELECT fechapago, SUM(importe) as TotalVentas
+FROM gastonew
+GROUP BY fechapago
+ORDER BY fechapago;
+
+
+--Esta consulta suma los gastos (importe) de cada tipo de gasto (idtipogasto) en el período 3 (periodo = 3) de la tabla gasto. Cada tipo de gasto tendrá una suma total.
+SELECT idtipogasto, SUM(importe) as TotalGastos
+FROM gasto
+WHERE periodo = 3
+GROUP BY idtipogasto;
+
+SELECT idtipogasto, SUM(importe) as TotalGastos
+FROM gastonew
+WHERE periodo = 3
+GROUP BY idtipogasto;
