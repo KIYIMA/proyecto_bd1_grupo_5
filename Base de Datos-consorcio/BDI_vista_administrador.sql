@@ -426,3 +426,197 @@ SELECT idtipogasto, SUM(importe) as TotalGastos
 FROM gastonew
 WHERE periodo = 3
 GROUP BY idtipogasto;
+
+
+
+--------------------------------- Optimizacion de consulta a traves de indices ------------------
+
+--PRIMER EJECUCION DE CONSULTA 
+--Permite ver detalle de los tiempos de ejecucionde la consulta
+SET STATISTICS TIME ON;
+SET STATISTICS IO ON;
+go
+--Consulta: Gastos del periodo 8 
+
+SELECT g.idgasto, g.periodo, g.fechapago, t.descripcion
+FROM gasto g
+INNER JOIN tipogasto t ON g.idtipogasto = t.idtipogasto
+WHERE g.periodo = 8 ;
+go
+
+
+--SEGUNDA EJECUCION DE CONSULTA ----------------------------------------------------------------------------
+
+--SqlServer toma la PK de gasto como indice CLUSTERED, asique para crear el solicitado en periodo debemos primero eliminar el actual
+ALTER TABLE gasto
+DROP CONSTRAINT PK_gasto;
+go
+
+--Transformamos la PK en un indice NONCLUSTERED
+ALTER TABLE gasto
+ADD CONSTRAINT PK_gasto PRIMARY KEY NONCLUSTERED (idGasto);
+go
+
+--Creamos un nuevo indice CLUSTERED en periodo
+CREATE CLUSTERED INDEX IX_gasto_periodo
+ON gasto (periodo);
+go
+--Permite ver detalle de los tiempos de ejecucionde la consulta
+SET STATISTICS TIME ON;
+SET STATISTICS IO ON;
+go
+--Consulta: Gastos del periodo 8 
+
+SELECT g.idgasto, g.periodo, g.fechapago, t.descripcion
+FROM gasto g
+INNER JOIN tipogasto t ON g.idtipogasto = t.idtipogasto
+WHERE g.periodo = 8 ;
+go
+
+
+--TERCER EJECUCION DE CONSULTA------------------------------------------------------------------
+-- Elimina el Indice agrupado anterior
+DROP INDEX IX_gasto_periodo ON gasto;
+go
+
+-- Crea un nuevo Indice agrupado en periodo, fechapago e idtipogasto
+CREATE CLUSTERED INDEX IX_Gasto_Periodo_FechaPago_idTipoGasto
+ON gasto (periodo, fechapago, idtipogasto);
+go
+
+--Permite ver detalle de los tiempos de ejecucionde la consulta
+SET STATISTICS TIME ON;
+SET STATISTICS IO ON;
+go
+--Consulta: Gastos del periodo 8 
+
+SELECT g.idgasto, g.periodo, g.fechapago, t.descripcion
+FROM gasto g
+INNER JOIN tipogasto t ON g.idtipogasto = t.idtipogasto
+WHERE g.periodo = 8 ;
+go
+
+
+--------------------------------------------- Triggers ------------------------------------------
+
+--crear registro de actividad, para ello es necesario una tabla llamada auditoria, esta tendra como funcion registrar
+--operaciones que afecten al contenido de la base de datos, proporcionando así un
+--registro de actividad
+USE base_consorcio
+go
+
+CREATE TABLE auditoria (
+    id_auditoria int identity primary key,
+    tabla_afectada varchar(100),  
+	columna_afectada varchar(100), 
+    accion varchar(10),           
+    fecha_hora datetime,          
+    usuario varchar(50),        
+    valor_anterior varchar(max),  
+    valor_actual varchar(max),     
+);
+
+--- CREAR LOS TRIGGERS CON LOS SCRIPTS "conserjeTriggerUpdate" "conserjeTriggerDelete" "conserjeTriggerInsert" dentro de la carpeta triggers de la tabla conserje (click derecho---> insertar trigger)
+
+---Probamos los triggers agregando registros
+INSERT INTO conserje (apeynom, tel, fechnac, estciv)
+VALUES ('Juan Pérez', '5554567', '1985-03-15', 'S');
+
+INSERT INTO conserje (apeynom, tel, fechnac, estciv)
+VALUES ('María González', '5876543', '1990-08-22', 'C');
+
+INSERT INTO conserje (apeynom, tel, fechnac, estciv)
+VALUES ('Carlos Rodríguez', '5555555', '1982-12-10', 'D');
+
+--probamos modicficando
+UPDATE conserje
+SET tel = '55512222'
+WHERE idconserje = 1;
+UPDATE conserje
+SET estciv = 'O'
+WHERE idconserje = 2;
+
+---probamos eliminando
+DELETE FROM conserje
+WHERE idconserje = 3;
+
+
+---------------------------------------- Manejo de permisos a nivel de usuarios de base de datos ---------------------------------
+
+USE base_consorcio;
+
+/*
+Creamos usuarios de prubea
+*/
+
+CREATE LOGIN UsuarioAnalista WITH PASSWORD = 'ContrasenaAnalista';
+CREATE LOGIN UsuarioDisenador WITH PASSWORD = 'ContrasenaDisenador';
+
+
+CREATE USER UsuarioAnalista FOR LOGIN UsuarioAnalista;
+CREATE USER UsuarioDisenador FOR LOGIN UsuarioDisenador;
+
+
+/*
+
+Creamos dos roles
+*/
+
+CREATE ROLE Analistas;
+CREATE ROLE Disenadores;
+
+
+/*
+Le damos permisos  a los roles
+*/
+
+GRANT SELECT TO Analistas;
+
+
+GRANT CREATE TABLE TO Disenadores;
+GRANT ALTER ON SCHEMA::dbo TO Disenadores;
+
+/*
+Le asignamos a cada role los usuarios
+*/
+
+ALTER ROLE Analistas ADD MEMBER UsuarioAnalista;
+ALTER ROLE Disenadores ADD MEMBER UsuarioDisenador;
+
+/*
+Crear usuario solo vista
+*/
+CREATE SCHEMA ViewSchema AUTHORIZATION dbo;
+GO
+-- Crear una nueva vista en este esquema
+-- Crear vistas para cada tabla
+CREATE VIEW ViewSchema.ProvinciaView AS SELECT * FROM provincia;
+GO
+CREATE VIEW ViewSchema.LocalidadView AS SELECT * FROM localidad;
+GO
+CREATE VIEW ViewSchema.ZonaView AS SELECT * FROM zona;
+GO
+CREATE VIEW ViewSchema.ConsorcioView AS SELECT * FROM consorcio;
+GO
+CREATE VIEW ViewSchema.GastoView AS SELECT * FROM gasto;
+GO
+CREATE VIEW ViewSchema.ConserjeView AS SELECT * FROM conserje;
+GO
+CREATE VIEW ViewSchema.AdministradorView AS SELECT * FROM administrador;
+GO
+CREATE VIEW ViewSchema.TipoGastoView AS SELECT * FROM tipogasto;
+GO
+-- Crear un nuevo rol de base de datos
+CREATE ROLE db_viewreader;
+
+-- Otorgar permisos SELECT a todos los objetos en el esquema ViewSchema al nuevo rol de base de datos
+GRANT SELECT ON SCHEMA::ViewSchema TO db_viewreader;
+
+
+-- Crear un nuevo usuario
+CREATE USER usuarioVista WITHOUT LOGIN;
+
+-- Agregar el nuevo usuario al rol de base de datos
+ALTER ROLE db_viewreader ADD MEMBER usuarioVista;
+
+
