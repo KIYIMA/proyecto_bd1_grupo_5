@@ -79,6 +79,8 @@ select * from vistaGeneral order by nombre asc ;
 -- 8) Las concluciones fui poniendo en cada punto.
 
 
+
+
 -- Implementacion de backup y restore
 
 -- 1 Verificar el modo de recuperación de la base de datos
@@ -90,9 +92,9 @@ WHERE name = 'base_consorcio;';
 go
 
 -- 2 cambiamos el modo de recuperacion
-USE master -- se utiliza el contexto de la base de datos master
+USE master -- se usa la instancia de la base Master
 ALTER DATABASE base_consorcio
-SET RECOVERY FULL;
+SET RECOVERY FULL; --El recovery se realizara de forma completa, a fin de preservar la totalidad de datos
 
 go
 
@@ -116,14 +118,14 @@ INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, id
 INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, idtipogasto, importe) VALUES (1, 3, 1, 5, GETDATE(), 9, 1300);
 
 
--- 4 Realizamos backup del log de la base de datos
+--5 Realizamos backup del log de la base de datos
 
 BACKUP LOG base_consorcio
 TO DISK = 'C:\backup\LogBackup.trn'
 WITH FORMAT, INIT;
 
 
--- Insertamos 10 registros mas
+--6 Insertamos 10 registros mas
 
 select * from gasto
 
@@ -140,13 +142,13 @@ INSERT INTO gasto (idprovincia, idlocalidad, idconsorcio, periodo, fechapago, id
 
 
 
---5 Realizamos backup del log en otra ubicacion
+--7 Realizamos backup del log en otra ubicacion
 
 BACKUP LOG base_consorcio
 TO DISK = 'C:\backup\logs\LogBackup2.trn'
 WITH FORMAT, INIT;
 
---6 Restauramos el backup de la base de datos
+--8 Restauramos el backup de la base de datos
 
 USE master
 
@@ -158,7 +160,7 @@ RESTORE LOG base_consorcio
 FROM DISK = 'C:\backup\LogBackup.trn'
 WITH NORECOVERY;
 
--- Segundo log
+--9 Segundo log
 
 RESTORE LOG base_consorcio
 FROM DISK = 'C:\backup\logs\LogBackup2.trn'
