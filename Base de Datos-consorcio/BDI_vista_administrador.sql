@@ -11,6 +11,8 @@ CREATE VIEW vistaAdministrador AS
 SELECT apeynom, sexo, fechnac
 FROM administrador;
 
+GO
+
 SELECT * FROM vistaAdministrador;
 
 
@@ -31,17 +33,17 @@ Insert into vistaAdministrador(apeynom,sexo,fechnac) values ('GOMEZ MATIAS GABRI
 Insert into vistaAdministrador(apeynom,sexo,fechnac) values ('CORREA HUGO E.', 'M', '19930811')
 Insert into vistaAdministrador(apeynom,sexo,fechnac) values ('MACHUCA CEFERINA', 'F', '19910916')
 Insert into vistaAdministrador(apeynom,sexo,fechnac) values ('CARDOZO MAXIMA', 'F', '19881107')
-Insert into vistaAdministrador(apeynom,sexo,fechnac) values ('', 'F', ''); -- Prueba en restricciones faltantes.
+Insert into vistaAdministrador(apeynom,sexo,fechnac) values ('', 'F', ''); -- Prueba en restricciones faltantes, en la creacion de base_consorcio, no se detalla not null al crear las tablas
 
-select * from vistaAdministrador ;
+SELECT * FROM vistaAdministrador ;
 
 
 
 -- 4) Realizar update sobre algunos de los registros creados y volver a verificar el resultado en la tabla.
 -- NOTA: Se actualiza el registro normalmente.
 -- OBSERVACIÓN: Al actualizar un registro, éste debe tener un campo clave para poder acceder a el y asegurarnos de que es el único con dicho valor en ese campo clave. Tal vez deberíamos agregar a la vista el campo (índice) "idadmin" para solucionar este inconveniente. 
-Update vistaAdministrador set fechnac = '19990916' where apeynom = 'CARDOZO PRUEBA';
-select * from administrador order by idadmin desc;
+Update vistaAdministrador set fechnac = '19990916' where apeynom = 'AGUIRRE LUCIO';
+SELECT * FROM administrador order by apeynom asc;
 
 
 
@@ -50,6 +52,7 @@ select * from administrador order by idadmin desc;
 -- OBSERVACIÓN: Para eliminar los registros creados con la vista tuve que comparar en los registros de "administrador" el campo "tel" en donde éstos eran nulos, lo cual no es lo correcto ya que, si se había cargardo un registro con "tel" en null que no haya sido con la vista, éste se eliminaria también. Mi solución sería crear un índice en la vista el cual va ser de gran ayuda para realizar esta operación.
 DELETE FROM administrador
 WHERE tel is NULL;
+SELECT * FROM administrador order by apeynom asc;
 
 
 -- 6) Crear una vista que muestre los datos de las columnas de las siguientes tablas: (Administrador->Apeynom, consorcio->Nombre, gasto->periodo, gasto->fechaPago, tipoGasto->descripcion) .
@@ -61,7 +64,9 @@ JOIN [dbo].[administrador] ON [dbo].[administrador].idadmin = [dbo].[consorcio].
 JOIN [dbo].[gasto] ON [dbo].[gasto].idconsorcio = [dbo].[consorcio].idconsorcio
 JOIN [dbo].[tipogasto] ON [dbo].[tipogasto].idtipogasto = [dbo].[gasto].idtipogasto;
 
-select * from vistaGeneral ;
+GO
+
+SELECT * FROM vistaGeneral ;
 
 
 
@@ -74,9 +79,9 @@ ADD CONSTRAINT unicoFechaPago UNIQUE (fechaPago);
 -- Creo el índice para fechaPago
 CREATE UNIQUE CLUSTERED INDEX IX_vistaGeneral_FechaPago
 ON [dbo].[vistaGeneral] (fechaPago);
-select * from vistaGeneral order by nombre asc ;
+SELECT * FROM vistaGeneral ORDER BY nombre ASC ;
 
--- 8) Las concluciones fui poniendo en cada punto.
+
 
 
 

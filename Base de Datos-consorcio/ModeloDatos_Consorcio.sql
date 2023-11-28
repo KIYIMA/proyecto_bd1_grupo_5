@@ -1,6 +1,6 @@
---CREATE DATABASE base_consorcio;
+CREATE DATABASE base_consorcio;
 go
--- USE base_consorcio;
+USE base_consorcio;
 go
 -------------------
 if object_id('gasto') is not null DROP TABLE gasto;
@@ -101,7 +101,7 @@ Create table gasto	(
                          idlocalidad int,
                          idconsorcio int, 
 					     periodo int,
-					     fechapago datetime,					     
+					     fechapago datetime unique,					     
 						 idtipogasto int,
 						 importe decimal (8,2),	
 					     Constraint PK_gasto PRIMARY KEY (idgasto),
