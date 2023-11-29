@@ -191,58 +191,6 @@ END CATCH;
 -- Muestra el último registro de administrador cargado
 SELECT TOP 10 * FROM administrador ORDER BY idadmin DESC; 
 
---------------------------------- Optimizacion de consulta a traves de indices ------------------
-
--- Primer ejecución de consulta en la tabla administrador
-SET STATISTICS TIME ON;
-SET STATISTICS IO ON;
-
--- Consulta: Administradores que viven allí (viveahi = 'S')
-SELECT *
-FROM administrador
-WHERE viveahi = 'S';
-
--- Segunda ejecución de consulta ------------
-
--- Restaurar la clave primaria original de administrador
-ALTER TABLE administrador
-DROP CONSTRAINT PK_administrador;
-
--- Restaurar la clave primaria clusterizada
-ALTER TABLE administrador
-ADD CONSTRAINT PK_administrador PRIMARY KEY CLUSTERED (idadmin);
-
--- Permite ver detalle de los tiempos de ejecución de la consulta
-SET STATISTICS TIME ON;
-SET STATISTICS IO ON;
-
--- Consulta: Administradores que viven allí (viveahi = 'S')
-SELECT *
-FROM administrador
-WHERE viveahi = 'S';
-
--- Tercera ejecución de consulta------------------
-
--- Eliminar la clave primaria clusterizada anterior
-ALTER TABLE administrador
-DROP CONSTRAINT PK_administrador;
-
--- Crear un nuevo índice no agrupado en viveahi
-CREATE NONCLUSTERED INDEX IX_administrador_viveahi
-ON administrador (viveahi);
-
--- Permite ver detalle de los tiempos de ejecución de la consulta
-SET STATISTICS TIME ON;
-SET STATISTICS IO ON;
-
--- Consulta: Administradores que viven allí (viveahi = 'S')
-SELECT *
-FROM administrador
-WHERE viveahi = 'S';
-
-
-
-
 ---------------------------------------- Manejo de permisos a nivel de usuarios de base de datos ---------------------------------
 
 USE base_consorcio;
@@ -328,6 +276,7 @@ USE base_consorcio
 
 GO
 
+-- CREATE PROCEDURE InsertarAdministrador
 CREATE PROCEDURE InsertarAdministrador
 (
     @apeynom varchar(50),
@@ -341,10 +290,9 @@ BEGIN
     INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac)
     VALUES (@apeynom, @viveahi, @tel, @sexo, @fechnac);
 END
-
-USE base_consorcio
 GO
 
+-- CREATE PROCEDURE ModificarAdministrador
 CREATE PROCEDURE ModificarAdministrador
 (
     @idadmin int,
@@ -364,8 +312,12 @@ BEGIN
         fechnac = @fechnac
     WHERE idadmin = @idadmin;
 END
+GO
 
-USE base_consorcio
+-- DROP PROCEDURE IF EXISTS BorrarAdministrador;
+-- CREATE PROCEDURE BorrarAdministrador
+IF OBJECT_ID('BorrarAdministrador', 'P') IS NOT NULL
+    DROP PROCEDURE BorrarAdministrador;
 GO
 
 CREATE PROCEDURE BorrarAdministrador
@@ -377,20 +329,21 @@ BEGIN
     DELETE FROM administrador
     WHERE idadmin = @idadmin;
 END
+GO
+
 
 
 ---------------------------------------------------------------------------------------------------
 
 -- Lote de Pruebas --
-
--- Vaciar la tabla Administrador:
-DELETE FROM administrador;
-
--- Insertar datos utilizando el procedimiento almacenado correspondiente:
-EXEC InsertarAdministrador 'Julian Cruz', 'S', '3795024422', 'M', '17-02-1997';
+-- Insersecion de nuevo administrador usando el procedimiento
+EXEC InsertarAdministrador 'Paquito Perez', 'S', '3704567423', 'M', '1997-02-14';
+select * from administrador where (apeynom like 'Paquito Perez'); --verificacion
 
 -- Modificar datos de un administrador utilizando el procedimiento almacenado correspondiente:
-EXEC ModificarAdministrador 1, 'Julian Luis Cruz', 'N', '112443434', 'M', '17-02-1997';
+EXEC ModificarAdministrador 185, 'Juan Perez', 'N', '22334455', 'M', '1997-02-14';
+SELECT * FROM administrador ORDER BY idadmin DESC; -- Verificación
 
 -- Eliminacion de datos de un administrador utilizando el procedimiento almacenado correspondiente:
-EXEC BorrarAdministrador 1;
+EXEC BorrarAdministrador 185;
+SELECT * FROM administrador ORDER BY idadmin DESC; -- Verificación
