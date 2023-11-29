@@ -1,3 +1,13 @@
+-- Definición:
+
+-- VISTA: es una consulta almacenada con un nombre que se comporta como una tabla virtual. 
+-- No almacena datos físicos, sino que se basa en la ejecución de una consulta cada vez que se accede a ella.
+
+-- VISTA INDEXADA: es similar a una vista, pero tiene un índice asociado que almacena físicamente los resultados de la vista. 
+-- Los datos se almacenan en la base de datos, lo que mejora el rendimiento de las consultas.
+
+
+
 
 -- NOTA PRINCIPAL 
 -- Al crear la base de datos, crearla con el campo "fechaPago" de la tabla "gasto" como campo único para que después al crear el índice para la vista indexada no se generen errores.
@@ -81,7 +91,9 @@ CREATE UNIQUE CLUSTERED INDEX IX_vistaGeneral_FechaPago
 ON [dbo].[vistaGeneral] (fechaPago);
 SELECT * FROM vistaGeneral ORDER BY nombre ASC ;
 
-
+-- CREATE UNIQUE CLUSTERED INDEX: Crea un índice único y agrupado en la tabla vistaGeneral. El índice agrupado ordena físicamente los datos en la tabla según la clave del índice.
+-- IX_vistaGeneral_FechaPago: Es el nombre del índice.
+-- ON [dbo].[vistaGeneral] (fechaPago): Especifica que el índice se creará en la tabla vistaGeneral y se basará en la columna fechaPago.
 
 
 
