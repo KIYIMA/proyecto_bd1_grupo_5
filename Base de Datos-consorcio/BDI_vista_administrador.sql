@@ -15,7 +15,6 @@
 
 
 -- 2) Crear una vista sobre la tabla administrador que solo muestre los campos apynom, sexo  y fecha de nacimiento.
-USE base_consorcio;
 
 CREATE VIEW vistaAdministrador AS
 SELECT apeynom, sexo, fechnac
@@ -59,20 +58,22 @@ SELECT * FROM administrador order by apeynom asc;
 
 
 -- 5) Borrar todos los registros insertados a través de la vista.
--- OBSERVACIÓN: Para eliminar los registros creados con la vista tuve que comparar en los registros de "administrador" el campo "tel" en donde éstos eran nulos, lo cual no es lo correcto ya que, si se había cargardo un registro con "tel" en null que no haya sido con la vista, éste se eliminaria también. Mi solución sería crear un índice en la vista el cual va ser de gran ayuda para realizar esta operación.
+-- OBSERVACIÓN: Para eliminar los registros creados con la vista tuve que comparar en los registros de "administrador" el campo "tel" en donde éstos eran nulos, lo cual no es lo correcto ya que, si se había cargardo un registro con "tel" en null que no haya sido con la vista, éste se eliminaria también. 
+--Mi solución sería crear un índice en la vista el cual va ser de gran ayuda para realizar esta operación.
 DELETE FROM administrador
 WHERE tel is NULL;
 SELECT * FROM administrador order by apeynom asc;
 
 
--- 6) Crear una vista que muestre los datos de las columnas de las siguientes tablas: (Administrador->Apeynom, consorcio->Nombre, gasto->periodo, gasto->fechaPago, tipoGasto->descripcion) .
-CREATE VIEW vistaGeneral 
-WITH SCHEMABINDING
-AS SELECT [dbo].[administrador].apeynom, [dbo].[consorcio].nombre, [dbo].[gasto].periodo, [dbo].[gasto].fechaPago, [dbo].[tipogasto].descripcion
+-- 6) Crear una vista que muestre los datos de las columnas de las siguientes tablas: (Administrador->Apeynom, consorcio->Nombre, gasto->periodo, gasto->fechaPago, tipoGasto->descripcion).
+CREATE VIEW vistaGeneral WITH SCHEMABINDING AS
+SELECT [dbo].[administrador].apeynom, [dbo].[consorcio].nombre, [dbo].[gasto].periodo, [dbo].[gasto].fechaPago, [dbo].[tipogasto].descripcion
 FROM [dbo].[consorcio]
 JOIN [dbo].[administrador] ON [dbo].[administrador].idadmin = [dbo].[consorcio].idadmin 
 JOIN [dbo].[gasto] ON [dbo].[gasto].idconsorcio = [dbo].[consorcio].idconsorcio
 JOIN [dbo].[tipogasto] ON [dbo].[tipogasto].idtipogasto = [dbo].[gasto].idtipogasto;
+
+
 
 GO
 
@@ -89,6 +90,7 @@ ADD CONSTRAINT unicoFechaPago UNIQUE (fechaPago);
 -- Creo el índice para fechaPago
 CREATE UNIQUE CLUSTERED INDEX IX_vistaGeneral_FechaPago
 ON [dbo].[vistaGeneral] (fechaPago);
+GO
 SELECT * FROM vistaGeneral ORDER BY nombre ASC ;
 
 -- CREATE UNIQUE CLUSTERED INDEX: Crea un índice único y agrupado en la tabla vistaGeneral. El índice agrupado ordena físicamente los datos en la tabla según la clave del índice.

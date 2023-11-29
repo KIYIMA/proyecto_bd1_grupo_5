@@ -1,111 +1,115 @@
-create DATABASE base_consorcio;
+CREATE DATABASE base_consorcio;
+go
+USE base_consorcio;
+go
+-------------------
+if object_id('gasto') is not null DROP TABLE gasto;
+go
+---------------------
+if object_id('consorcio') is not null DROP TABLE consorcio
+go
+---------------------
+if object_id('localidad') is not null DROP TABLE localidad
+go
+---------------------
+if object_id('provincia') is not null DROP TABLE provincia
+go
+---------------------
+if object_id('zona') is not null DROP TABLE zona
+go
+---------------------
+if object_id('conserje') is not null DROP TABLE conserje
+go
+---------------------
+if object_id('administrador') is not null DROP TABLE administrador
+go
+---------------------
+if object_id('tipogasto') is not null DROP TABLE tipogasto
+go
+---------------------
 
-GO
+Create table provincia (idprovincia int primary key, 
+					    descripcion varchar(50),
+						km2 int,
+						cantdptos int,
+						poblacion int,
+						nomcabe varchar(50))
+go
+-------------------
 
-use base_consorcio;
+Create table localidad (idprovincia int, 
+						idlocalidad int, 
+					    descripcion varchar(50),
+					    Constraint PK_localidad PRIMARY KEY (idprovincia, idlocalidad),
+						Constraint FK_localidad_pcia FOREIGN KEY (idprovincia)  REFERENCES provincia(idprovincia)						 					     					     					     				     					     
+						)
+go
+-------------------
 
-GO
+Create table zona		(idzona int identity primary key, 
+					    descripcion varchar(50))
+go
+-------------------
 
-CREATE TABLE provincia(
-    idprovincia INT NOT NULL, 
-    descripcion VARCHAR (255) NOT NULL,
-    km2 INT NOT NULL,
-    cantdptos INT NOT NULL,
-    poblacion INT NOT NULL,
-    nomcabe VARCHAR (255) NOT NULL,
-    CONSTRAINT PK_PROVINCIA PRIMARY KEY (idprovincia)
+Create table conserje	(idconserje int identity primary key, 
+					     apeynom varchar(50),
+					     tel varchar(20),
+						 fechnac datetime,
+					     estciv varchar(1)  NULL default ('S') 
+						 CONSTRAINT CK_estadocivil CHECK (estciv IN ('S', 'C','D','O')),
+							 	)
+go
+-------------------
 
-);
+Create table administrador	(idadmin int identity primary key, 
+					     apeynom varchar(50),
+					     viveahi varchar(1)  NULL default ('N') 
+						 CONSTRAINT CK_habitante_viveahi CHECK (viveahi IN ('S', 'N')),
+					     tel varchar(20),
+					     sexo varchar(1)  NOT NULL 
+						 CONSTRAINT CK_sexo CHECK (sexo IN ('F', 'M')),
+                         fechnac datetime)
 
-GO
+go
+-------------------
 
-CREATE TABLE localidad(
-    idprovincia INT NOT NULL ,
-    idlocalidad INT NOT NULL, 
-    descripcion VARCHAR (255),
-    CONSTRAINT PK_LOCALIDAD PRIMARY KEY (idprovincia, idlocalidad),
-    CONSTRAINT FK_LOCALIDAD_ID_PROVINCIA FOREIGN KEY (idprovincia) REFERENCES provincia(idprovincia)
-);
+Create table tipogasto	(idtipogasto int primary key, 
+					    descripcion varchar(50))
+go
+-------------------
 
-GO
+Create table consorcio	(idprovincia int,
+                         idlocalidad int,
+                         idconsorcio int, 
+					     nombre varchar(50),
+					     direccion varchar(250),					     
+					     idzona int,	
+						 idconserje int,	
+						 idadmin int,	
+					     Constraint PK_consorcio PRIMARY KEY (idprovincia, idlocalidad,idconsorcio),
+						 Constraint FK_consorcio_pcia FOREIGN KEY (idprovincia,idlocalidad)  REFERENCES localidad(idprovincia,idlocalidad),
+						 Constraint FK_consorcio_zona FOREIGN KEY (idzona)  REFERENCES zona(idzona),						 					     					     					     				     					     
+						 Constraint FK_consorcio_conserje FOREIGN KEY (idconserje)  REFERENCES conserje(idconserje),
+						 Constraint FK_consorcio_admin FOREIGN KEY (idadmin)  REFERENCES administrador(idadmin)						 					     					     					     				     					     						 						 						 					     					     					     				     					     						 
+							)
+go
+-------------------
 
-CREATE TABLE zona(
-    idzona INT NOT NULL IDENTITY(1,1),
-    descripcion VARCHAR(255) NOT NULL,
-    CONSTRAINT PK_ZONA PRIMARY KEY (idzona),
-    CONSTRAINT CHK_CHECK_DESCRIPCION_ZONA CHECK (descripcion in ('Centro', 'NORTE', 'SUR', 'ESTE', 'OESTE', 'Periferica'))
-);
+Create table gasto	(
+						idgasto int identity,
+						idprovincia int,
+                         idlocalidad int,
+                         idconsorcio int, 
+					     periodo int,
+					     fechapago datetime UNIQUE,					     
+						 idtipogasto int,
+						 importe decimal (8,2),	
+					     Constraint PK_gasto PRIMARY KEY (idgasto),
+						 Constraint FK_gasto_consorcio FOREIGN KEY (idprovincia,idlocalidad,idconsorcio)  REFERENCES consorcio(idprovincia,idlocalidad,idconsorcio),
+						 Constraint FK_gasto_tipo FOREIGN KEY (idtipogasto)  REFERENCES tipogasto(idtipogasto)					     					     						 					     					     
+							)
+go
 
-GO
-
-CREATE TABLE conserje(
-    idconserje INT NOT NULL IDENTITY(1,1),
-    ApeyNom VARCHAR (255) NOT NULL,
-    tel INT NOT NULL,
-    fechnac VARCHAR (50) NOT NULL,
-    estciv CHAR,
-    CONSTRAINT PK_CONSERJE PRIMARY KEY (idconserje)
-);
-
-GO
-
-CREATE TABLE administrador(
-    idadmin INT NOT NULL IDENTITY(1,1),
-    apeynom VARCHAR(255) NOT NULL,
-    viveahi CHAR NOT NULL,
-    tel BIGINT NOT NULL,
-    sexo CHAR NOT NULL,
-    fechnac VARCHAR (50) NOT NULL,
-    estciv CHAR NULL,
-    CONSTRAINT PK_ADMINISTRADOR PRIMARY KEY (idadmin)
-);
-
-GO
-
-CREATE TABLE consorcio(
-    idprovincia INT NOT NULL,
-    idconsorcio INT NOT NULL,
-    Nombre VARCHAR(255) NOT NULL,
-    direccion VARCHAR(255) NOT NULL,
-    idzona INT NOT NULL,
-    idconserje INT NOT NULL,
-    idadmin INT NOT NULL,
-    idlocalidad INT NOT NULL, 
-    CONSTRAINT PK_CONSORCIO PRIMARY KEY (idprovincia, idlocalidad,idconsorcio),
-    CONSTRAINT FK_CONSORCIO_IDPROVINCIA FOREIGN KEY (idprovincia) REFERENCES provincia(idprovincia),
-    CONSTRAINT FK_CONSORCIO_IDZONA FOREIGN KEY (idzona) REFERENCES zona(idzona),
-    CONSTRAINT FK_CONSORCIO_IDCONSERJE FOREIGN KEY (idconserje) REFERENCES conserje(idconserje),
-    CONSTRAINT FK_CONSORCIO_IDADMIN FOREIGN KEY (idadmin) REFERENCES administrador(idadmin)
-);
-
-GO
-
-CREATE TABLE tipogasto(
-    idtipogasto INT NOT NULL,
-    descripcion varchar(255) NOT NULL,
-    CONSTRAINT PK_TIPOGASTO PRIMARY KEY (idtipogasto),
-    CONSTRAINT CHK_CHECK_TIPOGASTO_DESCRIPCION CHECK (descripcion in ('Servicios', 'Limpieza', 'Sueldos', 'Aportes', 'OTROS'))
-);
-
-GO
-
-CREATE TABLE gasto(
-    idgasto INT NOT NULL IDENTITY(1,1),
-    idprovincia INT NOT NULL,
-    idlocalidad INT NOT NULL,
-    idconsorcio INT NOT NULL,
-    periodo INT NOT NULL,
-    fechapago VARCHAR (255) UNIQUE,
-    idtipogasto INT NOT NULL ,
-    importe FLOAT NOT NULL,
-    CONSTRAINT PK_GASTO PRIMARY KEY (idgasto),
-    CONSTRAINT FK_GASTO_IDPROVINCIA FOREIGN KEY (idprovincia) REFERENCES provincia(idprovincia),
-    CONSTRAINT FK_GASTO_IDLOCALIDAD FOREIGN KEY (idprovincia, idlocalidad) REFERENCES localidad(idprovincia, idlocalidad),
-    CONSTRAINT FK_GASTO_IDCONSORCIO FOREIGN KEY (idprovincia, idlocalidad,idconsorcio) REFERENCES consorcio(idprovincia, idlocalidad,idconsorcio),
-    CONSTRAINT FK_GASTO_IDTIPOGASTO FOREIGN KEY (idtipogasto) REFERENCES tipogasto(idtipogasto)
-);
-
-GO
 ---------------------------
 --BASE DE DATOS I. LABORATORIO SQL.
 --LOTE DE DATOS.
