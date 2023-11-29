@@ -129,9 +129,6 @@ INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac) VALUES ('Nombre
 BACKUP LOG NOMBRE_DE_TU_BASE_DE_DATOS TO DISK = 'C:\backup\LogBackup.trn' WITH FORMAT, INIT;
 SELECT * FROM administrador;
 
-
-
-
 --7 Realizamos backup del log en otra ubicacion
 
 BACKUP LOG base_consorcio
