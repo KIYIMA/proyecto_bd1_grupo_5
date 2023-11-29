@@ -113,7 +113,19 @@ USE base_consorcio;
 -- Mostrar todos los registros de la tabla administrador
 SELECT * FROM administrador;
 
---5 Insertar 10 registros en la tabla administrador
+
+
+-- 5 Realizar backup del log de la base de datos
+BACKUP LOG base_consorcio TO DISK = 'C:\backup\LogBackup.trn' WITH FORMAT, INIT;
+SELECT * FROM administrador;
+
+--6 Realizamos backup del log en otra ubicacion
+
+BACKUP LOG base_consorcio
+TO DISK = 'C:\backup\logs\LogBackup2.trn'
+WITH FORMAT, INIT;
+
+--7 Insertar 10 registros en la tabla administrador
 INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac) VALUES ('Nombre1 Apellido1', 'S', '123456789', 'M', '1990-01-01');
 INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac) VALUES ('Nombre2 Apellido2', 'N', '987654321', 'F', '1985-05-15');
 INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac) VALUES ('Nombre3 Apellido3', 'S', '555555555', 'M', '1992-08-20');
@@ -124,26 +136,19 @@ INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac) VALUES ('Nombre
 INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac) VALUES ('Nombre8 Apellido8', 'N', '666666666', 'F', '1998-09-30');
 INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac) VALUES ('Nombre9 Apellido9', 'S', '222222222', 'M', '1983-04-18');
 INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac) VALUES ('Nombre10 Apellido10', 'N', '333333333', 'F', '1997-07-22');
+SELECT * FROM administrador ORDER BY idadmin DESC; 
 
--- 6 Realizar backup del log de la base de datos
-BACKUP LOG base_consorcio TO DISK = 'C:\backup\LogBackup.trn' WITH FORMAT, INIT;
-SELECT * FROM administrador;
-
---7 Realizamos backup del log en otra ubicacion
-
-BACKUP LOG base_consorcio
-TO DISK = 'C:\backup\logs\LogBackup2.trn'
-WITH FORMAT, INIT;
 
 --8 Restauramos el backup de la base de datos
 
 USE master
 
+
 RESTORE DATABASE base_consorcio
 FROM DISK = 'C:\backup\consorcio_backup.bak'
 WITH REPLACE, NORECOVERY;
 
-RESTORE LOG base_consorcio
+RESTORE LOG base_consorcioS
 FROM DISK = 'C:\backup\LogBackup.trn'
 WITH NORECOVERY;
 
@@ -154,7 +159,7 @@ FROM DISK = 'C:\backup\logs\LogBackup2.trn'
 WITH RECOVERY;
 
 USE base_consorcio
-SELECT * FROM administradores
+SELECT * FROM administrador ORDER BY idadmin DESC; 
 
 
 ------------------------------------------implementacion de transacciones ----------------------------------
