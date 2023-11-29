@@ -174,7 +174,7 @@ BEGIN TRY
 
     -- Intentar insertar un consorcio con un idprovincia inexistente (999)
     INSERT INTO consorcio (idprovincia, idlocalidad, idconsorcio, nombre, direccion, idzona, idconserje, idadmin)
-    VALUES (999, 1, 1, 'EDIFICIO-111', 'PARAGUAY N 999', 5, 100, 1);
+    VALUES (1, 2, 999, 'EDIFICIO-111', 'PARAGUAY N 999', 5, 100, 1);
 
     -- Otros inserts en la tabla administrador (puedes agregar más según tus necesidades)
     INSERT INTO administrador (apeynom, viveahi, tel, sexo, fechnac)
@@ -189,7 +189,7 @@ END CATCH;
 
 -- Consulta para verificar el resultado de las transacciones
 -- Muestra el último registro de administrador cargado
-SELECT TOP 1 * FROM administrador ORDER BY idadmin DESC; 
+SELECT TOP 10 * FROM administrador ORDER BY idadmin DESC; 
 
 
 
